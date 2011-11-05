@@ -108,7 +108,7 @@ def load_map(filename):
     # Load object layers
     object_layers = dict()
     for tag in root.findall('objectgroup'):
-        layer = load_actor_layer(map_scene, tag, height, tile_height)
+        layer = load_object_layer(map_scene, tag, height, tile_height)
         object_layers[layer.name] = layer
 
     return layers, object_layers

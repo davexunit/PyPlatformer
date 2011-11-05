@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="20" height="20" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="Interior" tilewidth="32" tileheight="32">
+  <image source="../images/Interior_Town.png" width="800" height="600"/>
+ </tileset>
+ <tileset firstgid="451" name="Collision" tilewidth="32" tileheight="32">
+  <image source="../images/collision.png" width="128" height="32"/>
+ </tileset>
+ <layer name="ground" width="20" height="20">
+  <data encoding="base64" compression="zlib">
+   eJyrY2BgqKcSbgDi6UDMBMTMQMwIpdExMeIsQDwTap40EMsAsRSURsfEiMsimWcCxKYUYjMk81KBOI1CnD5q3qA1j1KzYBg9PaNjWSx68KkllJ7NsJiHT+1QiY9R88g3bwMQbySAN5GgDgBZbpfX
+  </data>
+ </layer>
+ <layer name="fringe" width="20" height="20">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFpAJeIOZDE1MFYhUy+WpArI7FHlsK+aNgFKADRyqb54RFLAuKYcAQiHWAWBeIDQiYZ0cld8FAOBBHYMGRWNTqQWli3YoLIPt3uAMA0SgIeQ==
+  </data>
+ </layer>
+ <layer name="over" width="20" height="20">
+  <data encoding="base64" compression="zlib">
+   eJxjYBi5gJtC/igYGYAJiJmxYBYK1Q5WIAHEwkAsAsTiA2C/PRasiUWdKJSm1K3I/h0FpAEALYcCow==
+  </data>
+ </layer>
+ <layer name="collision" width="20" height="20">
+  <data encoding="base64" compression="zlib">
+   eJw7zMjAcHgUU4RBAJlNKh+beTBxZEAOH12MEjBqHnXMI5SWSNVDbfNI9ROpdpBqHrq5pLqPWPdgy4+U2kUJGIj0h62MwocBfleTAQ==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="20" height="20">
+  <object name="Outside" type="portal" x="288" y="608" width="64" height="32">
+   <properties>
+    <property name="map" value="outside.tmx"/>
+    <property name="spawn" value="608,288"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

@@ -3,6 +3,7 @@ import cocos
 import pymunk
 
 import debug
+import tiled.tiled
 import util.resource
 import actorlayer
 import actors
@@ -24,18 +25,13 @@ class GameScene(cocos.scene.Scene):
 
     def load_map(self):
         debug.msg('Loading map')
-
-        # Test garbage
-        background = cocos.layer.ScrollableLayer()
-        background.add(cocos.sprite.Sprite('backgrounds/background.png',
-            anchor=(0,0)))
-        background.px_width = 1024
-        background.px_height = 768
-        self.scroller.add(background)
+        tile_layers, object_layers =\
+            tiled.tiled.load_map(util.resource.path('maps/test.tmx'))
+        self.scroller.add(tile_layers['top'], z=1)
 
         debug.msg('Creating actor layer')
         self.actors = actorlayer.ActorLayer()
-        self.add(self.actors, z=1)
+        self.scroller.add(self.actors, z=1)
 
         self.test_actor()
 

@@ -18,6 +18,7 @@ class Game(object):
 
         # Add paths for pyglet to use for resources
         pyglet.resource.path.append('../data/')
+        pyglet.resource.path.append('../data/maps/')
         pyglet.resource.reindex()
 
     def load_config(self, filename):
@@ -40,7 +41,7 @@ class Game(object):
 
         # Run game scene
         scene = gamescene.GameScene()
-        scene.add(editor.EditorLayer())
+        scene.add(editor.EditorLayer(), z=1)
         debug.msg('Starting game director')
         director.run(scene)
 
