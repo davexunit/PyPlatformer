@@ -24,9 +24,6 @@ import cocos
 class TileSet(list):
     pass
 
-class AnimSet(dict):
-    pass
-
 class ObjectLayer(object):
     def __init__(self, name, width, height, objects):
         self.name = name

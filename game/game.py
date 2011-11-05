@@ -46,6 +46,9 @@ class Game(object):
 
         debug.msg('Exiting game')
 
+# OH NOES A GLOBAL VARIABLE
+# Deal with it.
+game = Game()
+
 if __name__ == '__main__':
-    game = Game()
     game.run()

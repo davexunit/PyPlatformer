@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<animset image="tilesets/king.png" tilewidth="38" tileheight="66">
+    <anim name="stand_north" duration=".25">
+        0
+    </anim>
+    <anim name="stand_south" duration=".25">
+        12
+    </anim>
+    <anim name="stand_east" duration=".25">
+        4
+    </anim>
+    <anim name="stand_west" duration=".25">
+        8
+    </anim>
+    <anim name="walk_north" duration=".25">
+        0,1,2,3
+    </anim>
+    <anim name="walk_south" duration=".25">
+        12,13,14,15
+    </anim>
+    <anim name="walk_east" duration=".25">
+        4,5,6,7
+    </anim>
+    <anim name="walk_west" duration=".25">
+        8,9,10,11
+    </anim>
+</animset>

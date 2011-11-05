@@ -1,7 +1,9 @@
 import pyglet
+import cocos
 import weakref
 
-import cocos
+from actor.component import Component
+
 class SpriteComponent(Component):
     '''Graphics component that displays an animated sprite.
     '''
@@ -18,7 +20,10 @@ class SpriteComponent(Component):
 
     def on_refresh(self):
         self.owner.push_handlers(self)
-        self.owner.get_component('physics').push_handlers(self)
+
+        # Optional dependency on physics
+        if self.owner.has_component('physics'):
+            self.owner.get_component('physics').push_handlers(self)
 
     def on_move(self, x, y, rel_x, rel_y):
         self.sprite.position = (int(x + self._dx), int(y + self._dy))
@@ -44,7 +49,7 @@ class SpriteComponent(Component):
         self.update_animation()
 
 import math
-from ..game import game
+from game import game
 MOVE_NONE = 0
 MOVE_NORTH = 1
 MOVE_SOUTH = 2
