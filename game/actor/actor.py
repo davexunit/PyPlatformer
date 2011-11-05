@@ -1,9 +1,23 @@
+'''Actors in this context are defined as game objects that possess variable
+functionality. Actors have few properties on their own and functionality is
+acquired by adding 'components'.
+
+Components encapsulate a specific property of a game object. For example,
+Sprite, Physics, and AI could be components.
+
+The component-based game object model avoids the issues involved with deep
+inheritance hierarchies, such as code duplication. Components allow
+functionality to be defined cleanly, as each class will accomplish one task
+only, following the UNIX philosophy of having several small programs work
+together to complete a task.
+'''
+
 import weakref
 import pyglet
 import cocos
 
 class Actor(pyglet.event.EventDispatcher):
-    '''Actors represent any object on the map that isn't a tile. This class
+    '''Actors represent objects in a game that have variable functionality. This class
     is simply a container of components. Mix and match components to create the
     Actors that you need.
     '''
@@ -11,7 +25,7 @@ class Actor(pyglet.event.EventDispatcher):
         super(Actor, self).__init__()
         self.name = "Anonymous"
         self.group = None
-        self._parent_map = None
+        self._parent = None
         self._x = 0
         self._y = 0
         self.width = 0
@@ -65,20 +79,20 @@ class Actor(pyglet.event.EventDispatcher):
         return cocos.rect.Rect(self._x, self._y, self.width, self.height)
 
     @property
-    def parent_map(self):
-        if self._parent_map == None:
+    def parent(self):
+        if self._parent == None:
             return None
 
         return self._parent_map()
 
-    @parent_map.setter
-    def parent_map(self, new_parent_map):
-        if new_parent_map == None:
-            self._parent_map = None
+    @parent.setter
+    def parent(self, new_parent):
+        if new_parent == None:
+            self._parent = None
             return
 
-        if self._parent_map != None:
-            raise Exception("Actor '%s' already has a parent map" %
+        if self._parent != None:
+            raise Exception('Actor \'%s\' already has a parent' %
                     (self.name,))
         # Weakrefs keep away evil circular references
         self._parent_map = weakref.ref(new_parent_map)
@@ -91,11 +105,11 @@ class Actor(pyglet.event.EventDispatcher):
         '''Called when the actor moves. If the calling actor is intersecting
         any other actors then trigger events will be dispatched.
         '''
-        if self.parent_map == None:
+        if self.parent == None:
             return
 
         # Get all actors intersecting with bounding box
-        actors = self.parent_map.actors.get_in_region(self.get_rect())
+        actors = self.parent.get_in_region(self.get_rect())
         # Remove this actor from that list
         actors.remove(self)
 
@@ -176,136 +190,10 @@ class Actor(pyglet.event.EventDispatcher):
     def on_exit(self):
         '''Callback function when actor is removed from a map.
         '''
-        #for actor in self.intersect_actors:
-            #print "purge " + actor.name
-            #actor.intersect_actors.remove(self)
-            #actor.dispatch_event('on_actor_exit', self)
-        # Purge intersecting actors list
-        #self.intersect_actors.clear()
+        pass
 
 # Event handlers for Actor
 Actor.register_event_type('on_move')
 Actor.register_event_type('on_actor_enter')
 Actor.register_event_type('on_actor_exit')
 
-from component import *
-from .. import mapload
-class Player(Actor):
-    def __init__(self):
-        super(Player, self).__init__()
-        self.size = (24, 24)
-
-        # Load animations
-        anims = mapload.load_animset('anims/king.xml')
-
-        self.add_component(HumanInputComponent())
-        self.add_component(SpriteComponent(anims, offset=(-4,0)))
-        self.add_component(PhysicsComponent(200))
-        self.add_component(PlayerSoundComponent())
-        self.refresh_components()
-
-class Derp(Actor):
-    def __init__(self, animfile, dialog):
-        super(Derp, self).__init__()
-        self.size = (24, 24)
-
-        # Load animations
-        from .. import mapload
-        anims = mapload.load_animset(animfile)
-
-        #self.add_component(DumbAI())
-        self.add_component(SpriteComponent(anims, offset=(-4,0)))
-        self.add_component(PhysicsComponent(200))
-        self.add_component(DialogComponent(dialog))
-        self.refresh_components()
-
-@mapload.register_actor_factory('npc')
-def load_npc(properties):
-    npc = Derp(properties['file'], properties['dialog'])
-    return npc
-
-class Sign(Actor):
-    def __init__(self, text):
-        super(Sign, self).__init__()
-        self.add_component(DialogComponent(text))
-        self.refresh_components()
-
-@mapload.register_actor_factory('sign')
-def load_sign(properties):
-    sign = Sign(properties['text'])
-    return sign
-
-class Portal(Actor):
-    def __init__(self, destination, exit_portal):
-        super(Portal, self).__init__()
-        self.destination = destination
-        self.exit_portal = exit_portal
-        self.active = True
-        self.refresh_components()
-
-    def on_actor_enter(self, actor):
-        if self.active:
-            def load_map(dt):
-                from .. import map
-                from .. import util
-                from ..game import game
-
-                # Load new map
-                new_scene = mapload.load_map(self.destination)
-                new_scene.name = self.destination
-                new_scene.focus = actor
-
-                # Get the exit portal
-                portal = new_scene.actors.get_actor(self.exit_portal)
-                # The active flag is so that when the actor is placed onto the
-                # portal it doesn't trigger a map change causing an unbounded
-                # loop.
-                portal.active = False
-
-                #def old_death(ref):
-                #    print "old map died"
-                #oldmap = weakref.ref(actor.parent_map, old_death)
-
-                # Remove actor from current map and place on new map
-                self.parent_map.actors.remove_actor(actor)
-                new_scene.actors.add_actor(actor)
-                actor.position = portal.position
-
-                # Add the walkaround state
-                walkaround = map.mapscene.WalkaroundState()
-                walkaround.input_component = actor.get_component('input')
-                new_scene.state_replace(walkaround)
-
-                # Replace map
-                cocos.director.director.replace(cocos.scenes.transitions.FadeTransition(new_scene, 1))
-
-                #def do_refcount(dt):
-                #    from sys import getrefcount
-                #    print oldmap(), getrefcount(oldmap())
-                #pyglet.clock.schedule_interval(do_refcount, 1)
-                #from sys import getrefcount
-                #print "ref count:", getrefcount(oldmap())
-                #print "weakref count:", weakref.getweakrefcount(oldmap())
-                #def print_ref(dt):
-                #    import debug
-                #    debug.print_referrers(oldmap())
-            # Perform the map loading on the next game loop
-            pyglet.clock.schedule_once(load_map, 0)
-
-    def on_actor_exit(self, actor):
-        self.active = True
-
-@mapload.register_actor_factory('portal')
-def load_portal(properties):
-    return Portal(properties['map'], properties['exit'])
-
-from .. import map
-class TestScript(Actor):
-    def __init__(self):
-        super(TestScript, self).__init__()
-
-    def on_actor_enter(self, actor):
-        def func():
-            self.parent_map.state_push(map.mapscene.DialogState('Testing!'))
-        action = cocos.actions.CallFunc(func)#cocos.actions.Blink(5,.1)
-        self.parent_map.state_push(map.mapscene.CinematicState(action))

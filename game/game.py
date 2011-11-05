@@ -6,6 +6,7 @@ import debug
 import config
 import util.resource
 import gamescene
+import editor
 
 class Game(object):
     '''Wraps up all of the game content into one class.
@@ -38,8 +39,9 @@ class Game(object):
         director.show_FPS = True
 
         # Run game scene
-        debug.msg('Starting game director')
         scene = gamescene.GameScene()
+        scene.add(editor.EditorLayer())
+        debug.msg('Starting game director')
         director.run(scene)
 
         debug.msg('Exiting game')
