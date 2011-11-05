@@ -13,7 +13,8 @@ import cocos
 import pymunk
 
 import debug
-import util
+import util.resource
+import physics
 
 class Polygon(cocos.cocosnode.CocosNode):
     def __init__(self, vertices=[]):
@@ -57,10 +58,10 @@ class EditorLayer(cocos.layer.ScrollableLayer):
     def on_enter(self):
         super(EditorLayer, self).on_enter()
 
+        self.parent.push_handlers(self)
+
         self.polygon_layer = cocos.layer.ScrollableLayer()
         self.parent.scroller.add(self.polygon_layer, z=5)
-
-        self.load_xml(ElementTree.parse('test.xml').getroot())
 
         # Capture key state for easy movement handling
         self.keys = pyglet.window.key.KeyStateHandler()
@@ -69,11 +70,16 @@ class EditorLayer(cocos.layer.ScrollableLayer):
     def on_exit(self):
         super(EditorLayer, self).on_exit()
 
+        self.parent.remove_handlers(self)
         cocos.director.director.window.remove_handlers(self.keys)
+
+    def on_map_load(self):
+        self.physics = self.parent.physics
+        self.populate()
 
     def on_key_press(self, key, modifiers):
         if key == pyglet.window.key.S and modifiers & pyglet.window.key.MOD_CTRL:
-            self.to_xml()
+            self.save()
             return True
 
     def on_mouse_release(self, x, y, button, modifiers):
@@ -101,39 +107,60 @@ class EditorLayer(cocos.layer.ScrollableLayer):
 
     def commit_polygon(self):
         debug.msg('Adding polygon')
-        self.polygons.append(self.polygon)
         # Add to physics space
-        body = pymunk.Body(pymunk.inf, pymunk.inf)
-        polygon = pymunk.Poly(body, self.polygon.vertices)
-        polygon.friction = .75
-        self.parent.space.add_static(polygon)
+        polygon = physics.make_static_polygon(self.polygon.vertices)
+        self.polygons.append((polygon, self.polygon))
+        self.physics.space.add_static(polygon)
         # Polygon committed. Let user make a new one.
         self.polygon = None
 
-    def load_xml(self, element):
-        for p in element.findall('polygon'):
-            polygon = Polygon()
-            for v in p.findall('vertex'):
-                polygon.add_vertex((int(v.get('x')), int(v.get('y'))))
-            self.polygons.append(polygon)
-            self.polygon_layer.add(polygon)
+    def populate(self):
+        debug.msg('Populating physics editor')
+        for shape in self.physics.space.static_shapes:
+            if isinstance(shape, pymunk.Poly):
+                polygon = Polygon()
+                for p in shape.get_points():
+                    polygon.add_vertex((p.x, p.y))
+                self.polygon_layer.add(polygon)
 
     def to_xml(self):
         builder = ElementTree.TreeBuilder()
 
         builder.start('physics', {'name': 'physics'})
 
-        for p in self.polygons:
-            builder.start('polygon', {})
+        for shape in self.physics.space.static_shapes:
+            if isinstance(shape, pymunk.Poly):
+                builder.start('polygon', {})
 
-            for v in p.vertices:
-                builder.start('vertex', {'x': str(v[0]), 'y': str(v[1])})
-                builder.end('vertex')
+                for v in shape.get_points():
+                    x = str(int(v.x))
+                    y = str(int(v.y))
+                    builder.start('vertex', {'x': x, 'y': y})
+                    builder.end('vertex')
 
-            builder.end('polygon')
+                builder.end('polygon')
 
         builder.end('physics')
 
-        tree = ElementTree.ElementTree(builder.close())
-        tree.write('test.xml')
+        return builder.close()
+
+    def save(self):
+        debug.msg('Saving physics data')
+        # Serialize physics data
+        physics_element = self.to_xml()
+
+        # Open map file
+        tree = ElementTree.parse(util.resource.path(self.parent.map_filename))
+        root = tree.getroot()
+
+        # Remove old physics element
+        old = root.find('physics')
+        if old != None:
+            root.remove(old)
+
+        # Insert new physics element
+        root.append(physics_element)
+
+        # Save and close file
+        tree.write(util.resource.path(self.parent.map_filename))
 

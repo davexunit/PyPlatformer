@@ -7,8 +7,9 @@ import tiled.tiled
 import util.resource
 import actorlayer
 import actors
+import physics
 
-class GameScene(cocos.scene.Scene):
+class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
     def __init__(self):
         debug.msg('Initializing game scene')
         super(GameScene, self).__init__()
@@ -17,17 +18,16 @@ class GameScene(cocos.scene.Scene):
         self.scroller = cocos.layer.ScrollingManager()
         self.add(self.scroller)
 
-        self.init_physics()
-
     def on_enter(self):
         super(GameScene, self).on_enter()
         self.load_map()
 
     def load_map(self):
         debug.msg('Loading map')
-        tile_layers, object_layers =\
-            tiled.tiled.load_map(util.resource.path('maps/test.tmx'))
-        self.scroller.add(tile_layers['top'], z=1)
+        self.map_filename = 'maps/test.tmx'
+        tiledmap = tiled.tiled.load_map(util.resource.path(self.map_filename))
+        self.scroller.add(tiledmap['layer']['top'], z=1)
+        self.physics = tiledmap['physics'][0]
 
         debug.msg('Creating actor layer')
         self.actors = actorlayer.ActorLayer()
@@ -35,17 +35,12 @@ class GameScene(cocos.scene.Scene):
 
         self.test_actor()
 
+        self.dispatch_event('on_map_load')
+
     def test_actor(self):
         player = actors.Player()
         player.position = (100, 100)
         self.actors.add_actor(player)
 
-    def init_physics(self):
-        '''Initialize Chipmunk physics space and default settings.
-        '''
-        debug.msg('Initializing physics')
-
-        self.space = pymunk.Space()
-        self.space.gravity = pymunk.Vec2d(0.0, -900.0)
-        self.update_physics = True
+GameScene.register_event_type('on_map_load')
 

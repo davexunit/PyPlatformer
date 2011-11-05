@@ -69,10 +69,19 @@ def load_tileset(tag):
             glTexParameteri(tile.texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
     return tileset
 
+# Object factories
 factories = dict()
 def register_object_factory(name):
     def decorate(func):
         factories[name] = func
+        return func
+    return decorate
+
+# Factories for custom xml tags
+element_factories = dict()
+def register_element_factory(name):
+    def decorate(func):
+        element_factories[name] = func
         return func
     return decorate
 
@@ -94,6 +103,9 @@ def load_map(filename):
     tile_width = int(root.get('tilewidth'))
     tile_height = int(root.get('tileheight'))
 
+    # Holds all map data
+    tiledmap = {}
+
     # Load tilesets
     tileset = TileSet()
     for tag in root.findall('tileset'):
@@ -104,14 +116,27 @@ def load_map(filename):
     for tag in root.findall('layer'):
         layer = load_layer(tag, tileset, tile_width, tile_height)
         layers[layer.id] = layer
+    tiledmap['layer'] = layers
 
     # Load object layers
     object_layers = dict()
     for tag in root.findall('objectgroup'):
         layer = load_object_layer(map_scene, tag, height, tile_height)
         object_layers[layer.name] = layer
+    tiledmap['objectgroup'] = object_layers
 
-    return layers, object_layers
+    # Load all custom xml elements
+    for tag in element_factories.keys():
+        elements = root.findall(tag)
+        data = []
+        
+        if elements != None:
+            for element in elements:
+                data.append(element_factories[tag](element))
+
+        tiledmap[tag] = data
+
+    return tiledmap
     
 def load_layer(tag, tileset, tile_width, tile_height):
     # Get layer properties
