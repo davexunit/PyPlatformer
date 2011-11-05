@@ -9,7 +9,7 @@ a sprite to/from a batch node.
 import pyglet
 import cocos
 
-class ActorLayer(cocos.layer.ScrollableLayer):
+class ActorLayer(cocos.layer.ScrollableLayer, pyglet.event.EventDispatcher):
     def __init__(self):
         super(ActorLayer, self).__init__()
         self.actors = {}
@@ -20,10 +20,12 @@ class ActorLayer(cocos.layer.ScrollableLayer):
 
         self.actors[actor.name] = actor
         actor.on_enter()
+        self.dispatch_event('on_actor_add', actor)
     
     def remove_actor(self, actor):
         del self.actors[actor.name]
         actor.on_exit()
+        self.dispatch_event('on_actor_remove', actor)
 
     def get_actor(self, name):
         return self.actors[name]
@@ -42,8 +44,10 @@ class ActorLayer(cocos.layer.ScrollableLayer):
                 actors.add(a)
         return actors
 
-    def update(self, dt):
+    def _step(self, dt):
         for actor in self.actors.values():
             actor.update(dt)
 
+ActorLayer.register_event_type('on_actor_add')
+ActorLayer.register_event_type('on_actor_remove')
 

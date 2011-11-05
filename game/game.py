@@ -1,6 +1,7 @@
 import pyglet
 import cocos
 from cocos.director import director
+import pymunk
 
 import debug
 import config
@@ -31,6 +32,9 @@ class Game(object):
         # Load configuration file
         self.load_config(util.resource.path('game.conf'))
 
+        # Initialize physics library
+        pymunk.init_pymunk()
+
         # Create window
         debug.msg('Creating window')
         director.init(width=self.config.getint('Graphics', 'screen_width'),
@@ -41,7 +45,10 @@ class Game(object):
 
         # Run game scene
         scene = gamescene.GameScene()
-        scene.add(editor.EditorLayer(), z=1)
+        display_editor = True
+        if display_editor:
+            scene.add(editor.EditorLayer(), z=1)
+
         debug.msg('Starting game director')
         director.run(scene)
 

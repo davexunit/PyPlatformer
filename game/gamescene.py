@@ -31,6 +31,7 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
 
         debug.msg('Creating actor layer')
         self.actors = actorlayer.ActorLayer()
+        self.actors.push_handlers(self)
         self.scroller.add(self.actors, z=1)
 
         self.test_actor()
@@ -41,6 +42,20 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
         player = actors.Player()
         player.position = (100, 100)
         self.actors.add_actor(player)
+
+    def on_actor_add(self, actor):
+        if actor.has_component('physics'):
+            physics = actor.get_component('physics')
+            self.physics.space.add(physics.body, *physics.objs)
+
+    def on_actor_exit(self, actor):
+        if actor.has_component('physics'):
+            physics = actor.get_component('physics')
+            self.physics.space.remove(physics.body, *physics.objs)
+    
+    def _step(self, dt):
+        self.physics.update(dt)
+
 
 GameScene.register_event_type('on_map_load')
 

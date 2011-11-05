@@ -10,6 +10,10 @@ class Physics(object):
         self.space.gravity = pymunk.Vec2d(0.0, -900.0)
         self.update_physics = True
 
+    def update(self, dt):
+        if self.update_physics:
+            self.space.step(1.0/60.0)
+
 def make_static_polygon(vertices):
     body = pymunk.Body(pymunk.inf, pymunk.inf)
     polygon = pymunk.Poly(body, vertices)
