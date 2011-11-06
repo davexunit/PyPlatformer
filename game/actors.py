@@ -8,13 +8,16 @@ import util.resource
 from actor.actor import Actor
 from components import *
 
-def make_rect(body, width, height, friction, mass=pymunk.inf, moment=pymunk.inf):
+def make_rect(width, height, friction, mass=pymunk.inf, moment=pymunk.inf):
     w = width / 2.0
     h = height / 2.0
     vertices = [(w, h), (-w, h), (-w, -h), (w, -h)]
+    if moment == -1:
+        moment = pymunk.moment_for_poly(mass, vertices, (0,0))
+    body = pymunk.Body(mass, moment)
     rect = pymunk.Poly(body, vertices)
     rect.friction = friction
-    return rect
+    return body, rect
 
 class Player(Actor):
     def __init__(self):
@@ -26,8 +29,7 @@ class Player(Actor):
 
         width = 38
         height = 66
-        body = pymunk.Body(10, pymunk.inf)
-        rect = make_rect(body,width, height, 0.5)
+        body, rect = make_rect(width, height, 0.5, mass=10)
         self.add_component(PhysicsComponent(body, (rect,)))
 
         self.add_component(PlayerInputComponent())
@@ -39,11 +41,10 @@ class Block(Actor):
     def __init__(self):
         super(Block, self).__init__()
 
+        self.add_component(SpriteComponent(cocos.sprite.Sprite('images/block_grass.png')))
         width = 38
         height = 66
-        self.add_component(SpriteComponent(cocos.sprite.Sprite('images/block_grass.png')))
-        body = pymunk.Body(10, pymunk.inf)
-        rect = make_rect(body, width, height, 0.5)
+        body, rect = make_rect(width, height, 0.5, mass=10.0, moment=-1)
         self.add_component(PhysicsComponent(body, (rect,)))
         self.refresh_components()
 

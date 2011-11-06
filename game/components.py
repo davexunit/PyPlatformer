@@ -21,7 +21,7 @@ class SpriteComponent(Component):
         self.sprite.position = (int(x), int(y))
 
     def on_rotate(self, angle):
-        pass
+        self.sprite.rotation = angle
 
 class AnimComponent(SpriteComponent):
     '''Graphics component that displays an animated sprite.
@@ -60,8 +60,9 @@ class PhysicsComponent(Component):
         super(PhysicsComponent, self).__init__()
         self.body = body
         self.objs = objs
-        self.old_position = (0, 0)
-        self.old_rotation = 0
+        self.old_x = 0
+        self.old_y = 0
+        self.old_angle = 0
 
     def on_refresh(self):
         self.owner.push_handlers(self)
@@ -71,9 +72,20 @@ class PhysicsComponent(Component):
 
     def update(self, dt):
         x, y = self.body.position
-        self.dispatch_event('on_move', x, y, 0, 0)
+
+        if self.old_x != x or self.old_y != y:
+            self.dispatch_event('on_move', x, y, 0, 0)
+
+        self.old_x = x
+        self.old_y = y
+
+        if self.old_angle != self.body.angle:
+            self.dispatch_event('on_rotate', self.body.angle)
+
+        self.old_angle = self.body.angle
 
 PhysicsComponent.register_event_type('on_move')
+PhysicsComponent.register_event_type('on_rotate')
 
 class PlayerInputComponent(Component):
     '''Allows an actor to be controlled by keyboard/mouse.

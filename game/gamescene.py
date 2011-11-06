@@ -47,10 +47,10 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
         self.player.get_component('physics').body.position = (100, 100)
         self.actors.add_actor(self.player)
 
-        for x in range(250, 500, 50):
+        for x in range(250, 1000, 50):
             block = actors.Block()
             block.name = 'Block %d' % x
-            block.get_component('physics').body.position = (x, 450)
+            block.get_component('physics').body.position = (x, 600)
             self.actors.add_actor(block)
 
     def on_actor_add(self, actor):
