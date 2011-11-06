@@ -31,5 +31,7 @@ class Player(Actor):
         rect = make_rect(body, self.width, self.height, 0.2)
         self.add_component(PhysicsComponent(body, (rect,)))
 
+        self.add_component(PlayerInputComponent())
+
         self.refresh_components()
 

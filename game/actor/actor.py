@@ -165,7 +165,7 @@ class Actor(pyglet.event.EventDispatcher):
         '''Tests if a component of given type is attached.
         '''
         return component_type in self.components
-
+    
     def get_component(self, component_type):
         '''Retrieves reference to the component of the given type. A KeyError
         will be raised if there is no component of that type.

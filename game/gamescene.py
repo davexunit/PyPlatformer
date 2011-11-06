@@ -42,9 +42,9 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
         self.dispatch_event('on_map_load')
 
     def test_actor(self):
-        player = actors.Player()
-        player.position = (100, 100)
-        self.actors.add_actor(player)
+        self.player = actors.Player()
+        self.player.position = (100, 100)
+        self.actors.add_actor(self.player)
 
     def on_actor_add(self, actor):
         if actor.has_component('physics'):

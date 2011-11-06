@@ -42,7 +42,7 @@ class Polygon(cocos.cocosnode.CocosNode):
         glEnd()
         glPopMatrix()
 
-class EditorLayer(cocos.layer.ScrollableLayer):
+class EditorLayer(cocos.layer.Layer):
     is_event_handler = True
 
     def __init__(self):

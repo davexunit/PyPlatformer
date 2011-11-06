@@ -8,6 +8,7 @@ import config
 import util.resource
 import gamescene
 import editor
+import gameplay
 
 class Game(object):
     '''Wraps up all of the game content into one class.
@@ -45,9 +46,8 @@ class Game(object):
 
         # Run game scene
         scene = gamescene.GameScene()
-        display_editor = True
-        if display_editor:
-            scene.add(editor.EditorLayer(), z=1)
+        #scene.add(editor.EditorLayer(), z=1)
+        scene.add(gameplay.GameplayLayer(), z=1)
 
         debug.msg('Starting game director')
         director.run(scene)
@@ -58,5 +58,3 @@ class Game(object):
 # Deal with it.
 game = Game()
 
-if __name__ == '__main__':
-    game.run()

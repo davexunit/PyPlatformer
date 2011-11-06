@@ -3,6 +3,7 @@ import cocos
 import weakref
 
 import debug
+import game
 from actor.component import Component
 
 class SpriteComponent(Component):
@@ -61,4 +62,34 @@ class PhysicsComponent(Component):
     
     def update(self, dt):
         self.owner.position = self.body.position
+
+class PlayerInputComponent(Component):
+    '''Allows an actor to be controlled by keyboard/mouse.
+    Input events must be injected from other code.
+    '''
+    component_type = 'input'
+
+    def __init__(self):
+        super(PlayerInputComponent, self).__init__()
+        self.move = {'up': False, 'down': False, 'left': False, 'right': False}
+
+    def on_refresh(self):
+        self.require('physics')
+
+    def on_key_press(self, key, modifiers):
+        if key == game.game.config.get_keycode('move_up'):
+            self.dispatch_event('on_move_start', self.MOVE_UP)
+
+    def on_key_release(self, key, modifiers):
+        if key == game.config.get_keycode('move_up'):
+            self.dispatch_event('on_move_stop', self.MOVE_UP)
+
+    def update(self, dt):
+        #physics = self.owner.get_component('physics')
+        #fy = (self.move['up'] - self.move['down']) * 9000
+        #physics.body.reset_forces()
+        physics.body.apply_force((0, fy))
+
+PlayerInputComponent.register_event_type('on_move_start')
+PlayerInputComponent.register_event_type('on_move_stop')
 

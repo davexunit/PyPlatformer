@@ -1,6 +1,9 @@
 import pyglet
 import weakref
 
+class ComponentException(Exception):
+    pass
+
 class Component(pyglet.event.EventDispatcher):
     '''Components provide functionality to Actors. Components avoid the deep
     hierarchy inheritance problem with game objects that share functionality.
@@ -51,6 +54,14 @@ class Component(pyglet.event.EventDispatcher):
         '''
         self.owner = None
         self.on_detach()
+
+    def require(self, component_type):
+        '''Raises an exception if a component of the given type is not
+        attached to the parent. Used to verify component dependencies.
+        '''
+        if not self.owner.has_component(component_type):
+            raise ComponentException('Missing dependency for %s: %s' %
+                    (self.component_type, component_type))
 
     def update(self, dt):
         '''Override this method to do time-based updates.
