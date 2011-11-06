@@ -33,5 +33,6 @@ class GameplayLayer(cocos.layer.Layer):
         player_input.on_key_release(key, modifiers)
 
     def _step(self, dt):
-        self.parent.scroller.set_focus(*self.parent.player.position)
+        x, y = self.parent.player.get_component('physics').body.position
+        self.parent.scroller.set_focus(x, y)
 

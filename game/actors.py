@@ -19,15 +19,15 @@ def make_rect(body, width, height, friction, mass=pymunk.inf, moment=pymunk.inf)
 class Player(Actor):
     def __init__(self):
         super(Player, self).__init__()
-        self.size = (38, 66)
-
         # Load animations
         anims = util.anim.load_animset(util.resource.path('anims/king.xml'))
 
         self.add_component(AnimComponent(anims))
 
+        width = 38
+        height = 66
         body = pymunk.Body(10, pymunk.inf)
-        rect = make_rect(body, self.width, self.height, 0.5)
+        rect = make_rect(body,width, height, 0.5)
         self.add_component(PhysicsComponent(body, (rect,)))
 
         self.add_component(PlayerInputComponent())
@@ -38,11 +38,12 @@ class Player(Actor):
 class Block(Actor):
     def __init__(self):
         super(Block, self).__init__()
-        self.size = (48, 47)
 
+        width = 38
+        height = 66
         self.add_component(SpriteComponent(cocos.sprite.Sprite('images/block_grass.png')))
         body = pymunk.Body(10, pymunk.inf)
-        rect = make_rect(body, self.width, self.height, 0.5)
+        rect = make_rect(body, width, height, 0.5)
         self.add_component(PhysicsComponent(body, (rect,)))
         self.refresh_components()
 

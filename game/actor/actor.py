@@ -26,57 +26,8 @@ class Actor(pyglet.event.EventDispatcher):
         self.name = "Anonymous"
         self.group = None
         self._parent = None
-        self._x = 0
-        self._y = 0
-        self.width = 0
-        self.height = 0
         self.components = {}
         self.intersect_actors = weakref.WeakSet()
-
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, newx):
-        dx = newx - self._x
-        self._x = newx
-        self.dispatch_event('on_move', self._x, self._y, dx, 0)
-        self.check_triggers()
-
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, newy):
-        dy = newy - self._y
-        self._y = newy
-        self.dispatch_event('on_move', self._x, self._y, 0, dy)
-        self.check_triggers()
-
-    @property
-    def position(self):
-        return (self._x, self._y)
-
-    @position.setter
-    def position(self, position):
-        newx, newy = position
-        dx, dy = newx - self._x, newy - self._y
-        self._x, self._y = newx, newy
-        self.dispatch_event('on_move', self._x, self._y, dx, dy)
-        self.check_triggers()
-        
-    @property
-    def size(self):
-        return (self.width, self.height)
-
-    @size.setter
-    def size(self, size):
-        self.width, self.height = size
-    
-    def get_rect(self):
-        return cocos.rect.Rect(self._x, self._y, self.width, self.height)
 
     @property
     def parent(self):
@@ -193,7 +144,6 @@ class Actor(pyglet.event.EventDispatcher):
         pass
 
 # Event handlers for Actor
-Actor.register_event_type('on_move')
 Actor.register_event_type('on_actor_enter')
 Actor.register_event_type('on_actor_exit')
 

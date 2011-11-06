@@ -14,10 +14,14 @@ class SpriteComponent(Component):
         self.sprite = sprite
 
     def on_refresh(self):
-        self.owner.push_handlers(self)
+        if self.owner.has_component('physics'):
+            self.owner.get_component('physics').push_handlers(self)
 
     def on_move(self, x, y, rel_x, rel_y):
         self.sprite.position = (int(x), int(y))
+
+    def on_rotate(self, angle):
+        pass
 
 class AnimComponent(SpriteComponent):
     '''Graphics component that displays an animated sprite.
@@ -56,6 +60,8 @@ class PhysicsComponent(Component):
         super(PhysicsComponent, self).__init__()
         self.body = body
         self.objs = objs
+        self.old_position = (0, 0)
+        self.old_rotation = 0
 
     def on_refresh(self):
         self.owner.push_handlers(self)
@@ -64,7 +70,10 @@ class PhysicsComponent(Component):
         self.body.position = (x, y)
 
     def update(self, dt):
-        self.owner.position = self.body.position
+        x, y = self.body.position
+        self.dispatch_event('on_move', x, y, 0, 0)
+
+PhysicsComponent.register_event_type('on_move')
 
 class PlayerInputComponent(Component):
     '''Allows an actor to be controlled by keyboard/mouse.
