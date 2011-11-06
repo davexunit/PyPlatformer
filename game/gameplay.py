@@ -28,3 +28,10 @@ class GameplayLayer(cocos.layer.Layer):
         player_input = self.parent.player.get_component('input')
         player_input.on_key_press(key, modifiers)
 
+    def on_key_release(self, key, modifiers):
+        player_input = self.parent.player.get_component('input')
+        player_input.on_key_release(key, modifiers)
+
+    def _step(self, dt):
+        self.parent.scroller.set_focus(*self.parent.player.position)
+

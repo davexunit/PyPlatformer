@@ -7,24 +7,27 @@ import game
 from actor.component import Component
 
 class SpriteComponent(Component):
-    '''Graphics component that displays an animated sprite.
-    '''
     component_type = 'graphics'
 
-    def __init__(self, anims, offset=(0,0)):
+    def __init__(self, sprite=None):
         super(SpriteComponent, self).__init__()
-        self.sprite = cocos.sprite.Sprite(anims['stand_south'], anchor=(0,0))
-        # Offset the sprite from the actor's hitbox
-        self._dx, self._dy = offset
-        self.anims = anims
-        self.walking = False
-        self.direction = 'south'
+        self.sprite = sprite
 
     def on_refresh(self):
         self.owner.push_handlers(self)
 
     def on_move(self, x, y, rel_x, rel_y):
-        self.sprite.position = (int(x + self._dx), int(y + self._dy))
+        self.sprite.position = (int(x), int(y))
+
+class AnimComponent(SpriteComponent):
+    '''Graphics component that displays an animated sprite.
+    '''
+    def __init__(self, anims):
+        super(AnimComponent, self).__init__(cocos.sprite.Sprite(anims['stand_south']))
+        # Offset the sprite from the actor's hitbox
+        self.anims = anims
+        self.walking = False
+        self.direction = 'south'
 
     def update_animation(self):
         prefix = 'walk_' if self.walking else 'stand_'
@@ -59,7 +62,7 @@ class PhysicsComponent(Component):
 
     def on_move(self, x, y, rel_x, rel_y):
         self.body.position = (x, y)
-    
+
     def update(self, dt):
         self.owner.position = self.body.position
 
@@ -71,25 +74,58 @@ class PlayerInputComponent(Component):
 
     def __init__(self):
         super(PlayerInputComponent, self).__init__()
-        self.move = {'up': False, 'down': False, 'left': False, 'right': False}
+
+    def on_refresh(self):
+        self.require('movement')
+
+    def on_key_press(self, key, modifiers):
+        movement = self.owner.get_component('movement')
+
+        if key == game.game.config.get_keycode('move_up'):
+            movement.jump()
+        if key == game.game.config.get_keycode('move_left'):
+            movement.move(MovementComponent.DIR_LEFT)
+        if key == game.game.config.get_keycode('move_right'):
+            movement.move(MovementComponent.DIR_RIGHT)
+
+    def on_key_release(self, key, modifiers):
+        movement = self.owner.get_component('movement')
+
+        if key == game.game.config.get_keycode('move_left'):
+            movement.stop_move(MovementComponent.DIR_LEFT)
+        if key == game.game.config.get_keycode('move_right'):
+            movement.stop_move(MovementComponent.DIR_RIGHT)
+
+class MovementComponent(Component):
+    component_type = 'movement'
+
+    DIR_LEFT = 0
+    DIR_RIGHT = 1
+
+    def __init__(self):
+        super(MovementComponent, self).__init__()
+        self.move_flags = [False, False]
+        self.speed = 5000
+        self.jump_force = 4000
 
     def on_refresh(self):
         self.require('physics')
 
-    def on_key_press(self, key, modifiers):
-        if key == game.game.config.get_keycode('move_up'):
-            self.dispatch_event('on_move_start', self.MOVE_UP)
+    def move(self, direction):
+        self.move_flags[direction] = True
+        self.update_forces()
 
-    def on_key_release(self, key, modifiers):
-        if key == game.config.get_keycode('move_up'):
-            self.dispatch_event('on_move_stop', self.MOVE_UP)
+    def stop_move(self, direction):
+        self.move_flags[direction] = False
+        self.update_forces()
 
-    def update(self, dt):
-        #physics = self.owner.get_component('physics')
-        #fy = (self.move['up'] - self.move['down']) * 9000
-        #physics.body.reset_forces()
-        physics.body.apply_force((0, fy))
+    def jump(self):
+        physics = self.owner.get_component('physics')
+        physics.body.apply_impulse((0, self.jump_force))
 
-PlayerInputComponent.register_event_type('on_move_start')
-PlayerInputComponent.register_event_type('on_move_stop')
+    def update_forces(self):
+        physics = self.owner.get_component('physics')
+        fx = (self.move_flags[self.DIR_RIGHT] - self.move_flags[self.DIR_LEFT]) * self.speed
+        physics.body.reset_forces()
+        physics.body.apply_force((fx, 0))
 
