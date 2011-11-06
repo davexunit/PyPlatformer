@@ -1,3 +1,8 @@
+try:
+    from xml.etree import ElementTree
+except ImportError:
+    import elementtree.ElementTree as ElementTree
+
 import pymunk
 
 import debug
@@ -20,11 +25,18 @@ def make_static_polygon(vertices):
     polygon.friction = .75
     return polygon
 
-@tiled.tiled.register_element_factory('physics')
-def load_physics(element):
+def from_xml(filename):
+    # Open xml file
+    tree = ElementTree.parse(filename)
+    root = tree.getroot()
+
+    # Root level tag is expected to be <geometry> so raise an exception if it's not
+    if root.tag != 'physics':
+        raise Exception('%s root level tag is %s rather than <physics>' % (filename, root.tag))
+
     physics = Physics()
 
-    for p in element.findall('polygon'):
+    for p in root.findall('polygon'):
         vertices = []
         for v in p.findall('vertex'):
             vertices.append((int(v.get('x')), int(v.get('y'))))

@@ -27,7 +27,7 @@ class Player(Actor):
         self.add_component(SpriteComponent(anims, offset=(-4,0)))
 
         body = pymunk.Body(10, pymunk.inf)
-        body.apply_impulse((7000, 0000))
+        body.apply_impulse((1000, 9000))
         rect = make_rect(body, self.width, self.height, 0.2)
         self.add_component(PhysicsComponent(body, (rect,)))
 

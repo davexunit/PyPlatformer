@@ -31,6 +31,19 @@ class ObjectLayer(object):
         self.height = height
         self.objects = objects
 
+class TiledMap(object):
+    def __init__(self):
+        self.orientation = None
+        self.version = None
+        self.width = 0
+        self.height = 0
+        self.tile_width = 0
+        self.tile_height = 0
+        self.tileset = TileSet()
+        self.layers = {}
+        self.object_groups = {}
+        self.properties = {}
+
 class MapException(Exception):
     pass
 
@@ -77,14 +90,6 @@ def register_object_factory(name):
         return func
     return decorate
 
-# Factories for custom xml tags
-element_factories = dict()
-def register_element_factory(name):
-    def decorate(func):
-        element_factories[name] = func
-        return func
-    return decorate
-
 def load_map(filename):
     # Open xml file
     tree = ElementTree.parse(filename)
@@ -97,48 +102,37 @@ def load_map(filename):
     if root.get('orientation') != 'orthogonal':
         raise MapException('Map orientation %s not supported. Orthogonal maps only' % root.get('orientation'))
 
-    # Get map properties
-    width = int(root.get('width'))
-    height = int(root.get('height'))
-    tile_width = int(root.get('tilewidth'))
-    tile_height = int(root.get('tileheight'))
+    # Initialize map
+    tiledmap = TiledMap()
+    tiledmap.orientation = root.get('orientation')
+    tiledmap.version = root.get('version')
+    tiledmap.width = int(root.get('width'))
+    tiledmap.height = int(root.get('height'))
+    tiledmap.tile_width = int(root.get('tilewidth'))
+    tiledmap.tile_height = int(root.get('tileheight'))
 
-    # Holds all map data
-    tiledmap = {}
+    # Load map properties
+    properties = root.find('properties')
+    for p in properties.findall('property'):
+        tiledmap.properties[p.get('name')] = p.get('value')
 
     # Load tilesets
-    tileset = TileSet()
     for tag in root.findall('tileset'):
-        tileset += load_tileset(tag)
+        tiledmap.tileset += load_tileset(tag)
 
     # Load layers
-    layers = dict()
     for tag in root.findall('layer'):
-        layer = load_layer(tag, tileset, tile_width, tile_height)
-        layers[layer.id] = layer
-    tiledmap['layer'] = layers
+        layer = load_layer(tag, tiledmap)
+        tiledmap.layers[layer.id] = layer
 
     # Load object layers
-    object_layers = dict()
     for tag in root.findall('objectgroup'):
-        layer = load_object_layer(map_scene, tag, height, tile_height)
-        object_layers[layer.name] = layer
-    tiledmap['objectgroup'] = object_layers
-
-    # Load all custom xml elements
-    for tag in element_factories.keys():
-        elements = root.findall(tag)
-        data = []
-        
-        if elements != None:
-            for element in elements:
-                data.append(element_factories[tag](element))
-
-        tiledmap[tag] = data
+        layer = load_object_group(tag, tiledmap)
+        tiledmap.object_groups[layer.name] = layer
 
     return tiledmap
     
-def load_layer(tag, tileset, tile_width, tile_height):
+def load_layer(tag, tiledmap):
     # Get layer properties
     name = tag.get('name')
     width = int(tag.get('width'))
@@ -158,12 +152,15 @@ def load_layer(tag, tileset, tile_width, tile_height):
         columns.append(row)
         for j in range(0, height):
             index = j * width + i
-            tile = tileset[data[index] - 1]
+            tile = tiledmap.tileset[data[index] - 1]
             if data[index] == 0:
                 tile = None
-            row.insert(0, cocos.tiles.RectCell(i, height - j - 1, tile_width, tile_height, None, tile))
+            row.insert(0, cocos.tiles.RectCell(i, height - j - 1,
+                tiledmap.tile_width, tiledmap.tile_height, None, tile))
 
-    return cocos.tiles.RectMapLayer(name, tile_width, tile_height, columns, (0,0,0), None)
+    return cocos.tiles.RectMapLayer(name, tiledmap.tile_width, 
+                                    tiledmap.tile_height, columns, (0,0,0),
+                                    None)
 
 def load_data(tag):
     # Get data properties
@@ -188,22 +185,18 @@ def load_data(tag):
 
     return array.array('I', decoded_data)
 
-def load_object_layer(tag, height, tile_height):
-    '''Map height and tile height need to be passed because OpenGL uses the
-    bottom-left of the screen as the origin where as Tiled uses the upper-left.
-    This means that we have to invert the Y coordinate.
-    '''
+def load_object_group(tag, tiledmap):
     name = tag.get('name')
     width = int(tag.get('width'))
     height = int(tag.get('height'))
 
     objects = []
     for child in tag.findall('object'):
-        objects.append(load_object(child, height, tile_height))
+        objects.append(load_object(child, tiledmap))
 
     return ObjectLayer(name, width, height, objects)
 
-def load_object(tag, height, tile_height):
+def load_object(tag, tiledmap):
     '''Loads Tiled object XML.
     Map height and tile height need to be passed because OpenGL uses the
     bottom-left of the screen as the origin where as Tiled uses the upper-left.
@@ -216,7 +209,8 @@ def load_object(tag, height, tile_height):
     properties['name'] = tag.get('name')
     properties['type'] = tag.get('type')
     properties['x'] = int(tag.get('x'))
-    properties['y'] = height * tile_height - int(tag.get('y')) - tile_height
+    properties['y'] = height * tiledmap.tile_height - int(tag.get('y')) - \
+                        tiledmap.tile_height
     properties['width'] = int(tag.get('width'))
     properties['height'] = int(tag.get('height'))
 

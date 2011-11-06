@@ -1,10 +1,14 @@
-<map height="100" orientation="orthogonal" tileheight="16" tilewidth="16" version="1.0" width="100">
- <tileset firstgid="1" name="tiles" tileheight="16" tilewidth="16">
-  <image height="200" source="tilesets/tiles.png" width="320" />
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="100" height="100" tilewidth="16" tileheight="16">
+ <properties>
+  <property name="physics" value="physics/test.xml"/>
+ </properties>
+ <tileset firstgid="1" name="tiles" tilewidth="16" tileheight="16">
+  <image source="tilesets/tiles.png" width="320" height="200"/>
  </tileset>
- <layer height="100" name="top" width="100">
-  <data compression="zlib" encoding="base64">
-   eJztzskNwjAQQNFIQA/QAksxbKECNtEBUDxztHwyixwg70lfHkWZxE0DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwD9ZRqvoEG2ibTavk7mNdt1cszf2yXyKztl8zJ5f6l2td4bRKLpGt4LuyQ6fN44mFXYoM48WFXYAAAAAujCNZoXnM++WfOOV3v3/t58DSfqRHmFrIpo=
+ <layer name="top" width="100" height="100">
+  <data encoding="base64" compression="zlib">
+   eJzt2EFqwkAUgGGhFbyAUK/QWo/QO9hau3FrrfQGrYf3BaKELIYkBhOS74OfPBInM+AukwkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ7KO3qPvaBN9luaPwryNvro55mjsC/NPdCzNh9L93/sdbXQeo2n0F/1X6FRYk3rnc95bfn0pzKm1Y/cULVpekz1/SFR3vzFZRq8tr8mezxLV3Q8AAIDhW3V9AK6y/2Kez7uG9cnlu12Va53fVnlHk27dv+/X1Dc8SepTZxaWKkI=
   </data>
  </layer>
- <physics name="physics"><polygon><vertex x="211" y="269" /><vertex x="238" y="269" /><vertex x="238" y="231" /><vertex x="213" y="228" /></polygon><polygon><vertex x="421" y="264" /><vertex x="445" y="269" /><vertex x="444" y="232" /><vertex x="417" y="227" /></polygon><polygon><vertex x="0" y="3" /><vertex x="3" y="62" /><vertex x="1599" y="58" /><vertex x="1597" y="1" /></polygon><polygon><vertex x="243" y="269" /><vertex x="422" y="268" /><vertex x="421" y="265" /><vertex x="242" y="263" /></polygon><polygon><vertex x="3" y="65" /><vertex x="1" y="1596" /><vertex x="20" y="1593" /><vertex x="13" y="63" /></polygon><polygon><vertex x="1579" y="54" /><vertex x="1585" y="1596" /><vertex x="1597" y="1594" /><vertex x="1597" y="54" /></polygon><polygon><vertex x="444" y="61" /><vertex x="575" y="86" /><vertex x="569" y="61" /></polygon><polygon><vertex x="574" y="85" /><vertex x="603" y="99" /><vertex x="604" y="63" /><vertex x="570" y="61" /></polygon></physics></map>
+</map>

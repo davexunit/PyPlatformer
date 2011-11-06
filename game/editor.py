@@ -123,7 +123,9 @@ class EditorLayer(cocos.layer.ScrollableLayer):
                     polygon.add_vertex((p.x, p.y))
                 self.polygon_layer.add(polygon)
 
-    def to_xml(self):
+    def save(self):
+        debug.msg('Saving level geometry')
+
         builder = ElementTree.TreeBuilder()
 
         builder.start('physics', {'name': 'physics'})
@@ -142,25 +144,7 @@ class EditorLayer(cocos.layer.ScrollableLayer):
 
         builder.end('physics')
 
-        return builder.close()
-
-    def save(self):
-        debug.msg('Saving physics data')
-        # Serialize physics data
-        physics_element = self.to_xml()
-
-        # Open map file
-        tree = ElementTree.parse(util.resource.path(self.parent.map_filename))
-        root = tree.getroot()
-
-        # Remove old physics element
-        old = root.find('physics')
-        if old != None:
-            root.remove(old)
-
-        # Insert new physics element
-        root.append(physics_element)
-
-        # Save and close file
-        tree.write(util.resource.path(self.parent.map_filename))
+        tree = ElementTree.ElementTree(builder.close())
+        filename = util.resource.path(self.parent.tiledmap.properties['physics'])
+        tree.write(filename)
 

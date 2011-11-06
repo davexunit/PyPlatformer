@@ -25,11 +25,14 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
     def load_map(self):
         debug.msg('Loading map')
         self.map_filename = 'maps/test.tmx'
-        tiledmap = tiled.tiled.load_map(util.resource.path(self.map_filename))
-        self.scroller.add(tiledmap['layer']['top'], z=1)
-        self.physics = tiledmap['physics'][0]
+        self.tiledmap = tiled.tiled.load_map(util.resource.path(self.map_filename))
+        self.scroller.add(self.tiledmap.layers['top'], z=1)
 
-        debug.msg('Creating actor layer')
+        debug.msg('Loading level geometry')
+        physics_file = util.resource.path(self.tiledmap.properties['physics'])
+        self.physics = physics.from_xml(physics_file)
+
+        debug.msg('Creating test actor layer')
         self.actors = actorlayer.ActorLayer()
         self.actors.push_handlers(self)
         self.scroller.add(self.actors, z=1)
