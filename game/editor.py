@@ -51,7 +51,9 @@ class EditorLayer(cocos.layer.Layer):
         super(EditorLayer, self).__init__()
 
         self.polygon = None
-        self.polygons = []
+        # bi-directional mapping for polygons to pymunk shapes
+        self.poly2shape = {}
+        self.shape2poly = {}
         self.active_color = (1.0, 0.0, 0.0, 1.0)
         self.inactive_color = (1.0, 1.0, 1.0, 1.0)
     
@@ -81,21 +83,50 @@ class EditorLayer(cocos.layer.Layer):
         if key == pyglet.window.key.S and modifiers & pyglet.window.key.MOD_CTRL:
             self.save()
             return True
+        elif key == pyglet.window.key.DELETE:
+            # Delete selected polygon
+            self.delete_polygon(self.polygon)
+            self.polygon = None
 
     def on_mouse_release(self, x, y, button, modifiers):
-        if button == pyglet.window.mouse.LEFT:
-            # Make a new polygon if need be
-            if self.polygon == None:
-                self.polygon = Polygon()
-                self.polygon.color = self.active_color
-                self.polygon_layer.add(self.polygon)
+        x, y = self.parent.scroller.pixel_from_screen(x, y)
 
-            # Add vertex to polygon
-            self.polygon.add_vertex(self.parent.scroller.pixel_from_screen(x, y))
+        if button == pyglet.window.mouse.LEFT:
+            if modifiers & pyglet.window.key.MOD_CTRL:
+                # Make a new polygon if need be
+                if self.polygon == None:
+                    self.polygon = Polygon()
+                    self.polygon.color = self.active_color
+                    self.polygon_layer.add(self.polygon)
+
+                # Add vertex to polygon
+                self.polygon.add_vertex((x, y))
+            else:
+                # Select a polygon to edit
+                shape = self.physics.space.point_query_first((x, y))
+                if shape != None:
+                    if self.polygon != None:
+                        self.commit_polygon()
+
+                    self.polygon = self.shape2poly[shape]
+                    self.polygon.color = self.active_color
+                else:
+                    if self.polygon != None:
+                        self.commit_polygon()
         elif button == pyglet.window.mouse.RIGHT:
-            # Done editing shape.
-            self.polygon.color = self.inactive_color
-            self.commit_polygon()
+            if modifiers & pyglet.window.key.MOD_CTRL:
+                # Remove a single vertex
+                if self.polygon != None and len(self.polygon.vertices) != 0:
+                    del self.polygon.vertices[-1]
+            else:
+                # Add polygon to scene or replace the existing one
+                if self.polygon != None:
+                    self.commit_polygon()
+        elif button == pyglet.window.mouse.MIDDLE:
+            # Select and delete polygon
+            shape = self.physics.space.point_query_first((x, y))
+            if shape != None:
+                self.delete_polygon(self.shape2poly[shape])
 
     def _step(self, dt):
         # Scroll map with WASD
@@ -105,12 +136,30 @@ class EditorLayer(cocos.layer.Layer):
         scroller = self.parent.scroller
         scroller.set_focus(scroller.fx + dx, scroller.fy + dy)
 
+    def delete_polygon(self, polygon):
+        debug.msg('Deleting polygon')
+        if polygon in self.poly2shape:
+            shape = self.poly2shape[polygon]
+            del self.poly2shape[polygon]
+            del self.shape2poly[shape]
+            self.polygon_layer.remove(polygon)
+            self.physics.space.remove_static(shape)
+
     def commit_polygon(self):
-        debug.msg('Adding polygon')
+        debug.msg('Committing polygon')
+
+        if self.polygon in self.poly2shape:
+            shape = self.poly2shape[self.polygon]
+            del self.poly2shape[self.polygon]
+            del self.shape2poly[shape]
+            self.physics.space.remove_static(shape)
+         
+        self.polygon.color = self.inactive_color
         # Add to physics space
-        polygon = physics.make_static_polygon(self.polygon.vertices)
-        self.polygons.append((polygon, self.polygon))
-        self.physics.space.add_static(polygon)
+        shape = physics.make_static_polygon(self.polygon.vertices)
+        self.poly2shape[self.polygon] = shape
+        self.shape2poly[shape] = self.polygon
+        self.physics.space.add_static(shape)
         # Polygon committed. Let user make a new one.
         self.polygon = None
 
@@ -122,6 +171,8 @@ class EditorLayer(cocos.layer.Layer):
                 for p in shape.get_points():
                     polygon.add_vertex((p.x, p.y))
                 self.polygon_layer.add(polygon)
+                self.poly2shape[polygon] = shape
+                self.shape2poly[shape] = polygon
 
     def save(self):
         debug.msg('Saving level geometry')

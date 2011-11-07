@@ -22,6 +22,7 @@ class SpriteComponent(Component):
         self.sprite.position = (int(x), int(y))
 
     def on_rotate(self, angle):
+        # Convert that shit to degrees because chipmunk uses radians
         self.sprite.rotation = math.degrees(angle)
 
 class AnimComponent(SpriteComponent):
