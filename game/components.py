@@ -1,6 +1,7 @@
 import pyglet
 import cocos
 import weakref
+import math
 
 import debug
 import game
@@ -21,7 +22,7 @@ class SpriteComponent(Component):
         self.sprite.position = (int(x), int(y))
 
     def on_rotate(self, angle):
-        self.sprite.rotation = angle
+        self.sprite.rotation = math.degrees(angle)
 
 class AnimComponent(SpriteComponent):
     '''Graphics component that displays an animated sprite.

@@ -46,8 +46,8 @@ class Game(object):
 
         # Run game scene
         scene = gamescene.GameScene()
-        #scene.add(editor.EditorLayer(), z=1)
-        scene.add(gameplay.GameplayLayer(), z=1)
+        scene.add(editor.EditorLayer(), z=1)
+        #scene.add(gameplay.GameplayLayer(), z=1)
 
         debug.msg('Starting game director')
         director.run(scene)
