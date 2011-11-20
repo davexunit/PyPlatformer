@@ -23,17 +23,18 @@ class Player(Actor):
     def __init__(self):
         super(Player, self).__init__()
         # Load animations
-        anims = util.anim.load_animset(util.resource.path('anims/king.xml'))
+        anims = util.anim.load_animset(util.resource.path('anims/test.xml'))
 
         self.add_component(AnimComponent(anims))
 
-        width = 38
-        height = 66
-        body, rect = make_rect(width, height, 0.5, mass=10)
-        self.add_component(PhysicsComponent(body, (rect,)))
+        width = 64 
+        height = 96 
+        body, rect = make_rect(width, height, 0.75, mass=10)
+        physics = CharacterPhysicsComponent(body, (rect,))
+        physics.movement_obj = rect
+        self.add_component(physics)
 
         self.add_component(PlayerInputComponent())
-        self.add_component(MovementComponent())
 
         self.refresh_components()
 

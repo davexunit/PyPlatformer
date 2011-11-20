@@ -8,15 +8,14 @@ import game
 from actor.component import Component
 
 class SpriteComponent(Component):
-    component_type = 'graphics'
-
+    component_type = 'sprite'
     def __init__(self, sprite=None):
         super(SpriteComponent, self).__init__()
         self.sprite = sprite
 
     def on_refresh(self):
-        if self.owner.has_component('physics'):
-            self.owner.get_component('physics').push_handlers(self)
+        self.physics = self.owner.require('physics')
+        self.physics.push_handlers(self)
 
     def on_move(self, x, y, rel_x, rel_y):
         self.sprite.position = (int(x), int(y))
@@ -66,12 +65,6 @@ class PhysicsComponent(Component):
         self.old_y = 0
         self.old_angle = 0
 
-    def on_refresh(self):
-        self.owner.push_handlers(self)
-
-    def on_move(self, x, y, rel_x, rel_y):
-        self.body.position = (x, y)
-
     def update(self, dt):
         x, y = self.body.position
 
@@ -89,50 +82,19 @@ class PhysicsComponent(Component):
 PhysicsComponent.register_event_type('on_move')
 PhysicsComponent.register_event_type('on_rotate')
 
-class PlayerInputComponent(Component):
-    '''Allows an actor to be controlled by keyboard/mouse.
-    Input events must be injected from other code.
+class CharacterPhysicsComponent(PhysicsComponent):
+    '''A physics component for all controllable (via AI or human input) game
+    actors.
     '''
-    component_type = 'input'
-
-    def __init__(self):
-        super(PlayerInputComponent, self).__init__()
-
-    def on_refresh(self):
-        self.require('movement')
-
-    def on_key_press(self, key, modifiers):
-        movement = self.owner.get_component('movement')
-
-        if key == game.game.config.get_keycode('move_up'):
-            movement.jump()
-        if key == game.game.config.get_keycode('move_left'):
-            movement.move(MovementComponent.DIR_LEFT)
-        if key == game.game.config.get_keycode('move_right'):
-            movement.move(MovementComponent.DIR_RIGHT)
-
-    def on_key_release(self, key, modifiers):
-        movement = self.owner.get_component('movement')
-
-        if key == game.game.config.get_keycode('move_left'):
-            movement.stop_move(MovementComponent.DIR_LEFT)
-        if key == game.game.config.get_keycode('move_right'):
-            movement.stop_move(MovementComponent.DIR_RIGHT)
-
-class MovementComponent(Component):
-    component_type = 'movement'
-
     DIR_LEFT = 0
     DIR_RIGHT = 1
 
-    def __init__(self):
-        super(MovementComponent, self).__init__()
+    def __init__(self, body, objs):
+        super(CharacterPhysicsComponent, self).__init__(body, objs)
+        self.movement_obj = None
         self.move_flags = [False, False]
-        self.speed = 5000
+        self.speed = 250
         self.jump_force = 4000
-
-    def on_refresh(self):
-        self.require('physics')
 
     def move(self, direction):
         self.move_flags[direction] = True
@@ -143,12 +105,42 @@ class MovementComponent(Component):
         self.update_forces()
 
     def jump(self):
-        physics = self.owner.get_component('physics')
-        physics.body.apply_impulse((0, self.jump_force))
+        self.body.apply_impulse((0, self.jump_force))
 
     def update_forces(self):
-        physics = self.owner.get_component('physics')
         fx = (self.move_flags[self.DIR_RIGHT] - self.move_flags[self.DIR_LEFT]) * self.speed
-        physics.body.reset_forces()
-        physics.body.apply_force((fx, 0))
+        #self.body.reset_forces()
+        self.movement_obj.surface_velocity = (fx, 0)
+        self.dispatch_event('on_direction_changed', fx, 0)
+CharacterPhysicsComponent.register_event_type('on_direction_changed')
+
+class InputComponent(Component):
+    component_type = 'input'
+
+class PlayerInputComponent(InputComponent):
+    '''Allows an actor to be controlled by keyboard/mouse.
+    Input events must be injected from other code.
+    '''
+    DIR_LEFT = 0
+    DIR_RIGHT = 1
+
+    def __init__(self):
+        super(PlayerInputComponent, self).__init__()
+
+    def on_refresh(self):
+        self.physics = self.owner.require('physics', CharacterPhysicsComponent)
+
+    def on_key_press(self, key, modifiers):
+        if key == game.game.config.get_keycode('move_up'):
+            self.physics.jump()
+        if key == game.game.config.get_keycode('move_left'):
+            self.physics.move(CharacterPhysicsComponent.DIR_LEFT)
+        if key == game.game.config.get_keycode('move_right'):
+            self.physics.move(CharacterPhysicsComponent.DIR_RIGHT)
+
+    def on_key_release(self, key, modifiers):
+        if key == game.game.config.get_keycode('move_left'):
+            self.physics.stop_move(CharacterPhysicsComponent.DIR_LEFT)
+        if key == game.game.config.get_keycode('move_right'):
+            self.physics.stop_move(CharacterPhysicsComponent.DIR_RIGHT)
 

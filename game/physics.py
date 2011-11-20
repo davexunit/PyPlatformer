@@ -22,7 +22,7 @@ class Physics(object):
 def make_static_polygon(vertices):
     body = pymunk.Body(pymunk.inf, pymunk.inf)
     polygon = pymunk.Poly(body, vertices)
-    polygon.friction = .75
+    polygon.friction = .95
     return polygon
 
 def from_xml(filename):

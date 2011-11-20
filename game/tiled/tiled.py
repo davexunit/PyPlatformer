@@ -60,6 +60,8 @@ def load_tileset(tag):
     name = tag.get('name')
     tile_width = int(tag.get('tilewidth'))
     tile_height = int(tag.get('tileheight'))
+    spacing = int(tag.get('spacing', 0))
+    margin = int(tag.get('margin', 0))
 
     child = tag.find('image')
     # Raise an exception if child tag is not <image>
@@ -70,8 +72,8 @@ def load_tileset(tag):
 
     # Construct tileset
     tileset = TileSet()
-    for y in range(0, image_height, tile_height):
-        for x in range(0, image_width, tile_width):
+    for y in range(margin, image_height - tile_height - spacing, tile_height + spacing):
+        for x in range(margin, image_width - spacing, tile_width + spacing):
             tile = image.get_region(x, image_height - y - tile_height, tile_width, tile_height)
             tileset.append(cocos.tiles.Tile(y * (image_width / tile_width) + x, None, tile))
             # set texture clamping to avoid mis-rendering subpixel edges

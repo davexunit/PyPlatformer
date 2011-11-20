@@ -11,7 +11,7 @@ level geometry editor that serializes to XML.
 
 Running
 -------
-python game/game.py
+`python main.py`
 
 Dependencies
 ------------

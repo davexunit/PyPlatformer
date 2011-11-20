@@ -13,7 +13,7 @@ class Component(pyglet.event.EventDispatcher):
     '''
     # Class level variable containing a string with the Component's type
     # string. Child classes must set this variable.
-    component_type = None
+    #component_type = None
 
     def __init__(self):
         self._owner = None
@@ -54,14 +54,6 @@ class Component(pyglet.event.EventDispatcher):
         '''
         self.owner = None
         self.on_detach()
-
-    def require(self, component_type):
-        '''Raises an exception if a component of the given type is not
-        attached to the parent. Used to verify component dependencies.
-        '''
-        if not self.owner.has_component(component_type):
-            raise ComponentException('Missing dependency for %s: %s' %
-                    (self.component_type, component_type))
 
     def update(self, dt):
         '''Override this method to do time-based updates.

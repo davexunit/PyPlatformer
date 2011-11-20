@@ -16,6 +16,9 @@ import weakref
 import pyglet
 import cocos
 
+class ActorException(Exception):
+    pass
+
 class Actor(pyglet.event.EventDispatcher):
     '''Actors represent objects in a game that have variable functionality. This class
     is simply a container of components. Mix and match components to create the
@@ -27,7 +30,6 @@ class Actor(pyglet.event.EventDispatcher):
         self.group = None
         self._parent = None
         self.components = {}
-        self.intersect_actors = weakref.WeakSet()
 
     @property
     def parent(self):
@@ -43,7 +45,7 @@ class Actor(pyglet.event.EventDispatcher):
             return
 
         if self._parent != None:
-            raise Exception('Actor \'%s\' already has a parent' %
+            raise ActorException('Actor \'%s\' already has a parent' %
                     (self.name,))
         # Weakrefs keep away evil circular references
         self._parent_map = weakref.ref(new_parent_map)
@@ -52,50 +54,16 @@ class Actor(pyglet.event.EventDispatcher):
         for component in self.components.values():
             component.update(dt)
     
-    def check_triggers(self):
-        '''Called when the actor moves. If the calling actor is intersecting
-        any other actors then trigger events will be dispatched.
-        '''
-        if self.parent == None:
-            return
-
-        # Get all actors intersecting with bounding box
-        actors = self.parent.get_in_region(self.get_rect())
-        # Remove this actor from that list
-        actors.remove(self)
-
-        # Dispatch on_actor_enter on newly intersecting actors
-        enter_actors = actors.difference(self.intersect_actors)
-        for actor in enter_actors:
-            self.dispatch_event('on_actor_enter', actor)
-            actor.intersect_actors.add(self)
-            actor.dispatch_event('on_actor_enter', self)
-
-        # Dispatch on_actor_exit on actors that are no longer intersecting.
-        exit_actors = self.intersect_actors.difference(actors)
-        for actor in exit_actors:
-            self.dispatch_event('on_actor_exit', actor)
-            try:
-                actor.intersect_actors.remove(self)
-            except Exception:
-                pass
-            actor.dispatch_event('on_actor_exit', self)
-
-        for actor in enter_actors.union(exit_actors):
-            actor.check_triggers()
-        
-        # Set new set 
-        self.intersect_actors = actors
-
     def add_component(self, component):
-        '''Adds a component to the component dictionary. If a component of the same type is
-        already attached, it will be detached and replaced by the new one.
+        '''Adds a component to the component dictionary. A
+        ActorDuplicateComponent exception will be raised if a component of the
+        same type already exitsts.
         '''
         t = component.component_type
 
-        # Run clean-up on previous component of the same type
         if t in self.components:
-            self.remove_component(t)
+            raise ActorException('Cannot add duplicate component of \
+                    type %s to actor %s' % (t, self.name))
 
         # Add new component
         self.components[t] = component
@@ -106,21 +74,41 @@ class Actor(pyglet.event.EventDispatcher):
         clean-up routines. A KeyError will be raised if a component of given
         type is not attached.
         '''
-        self.components[component_type].detach()
+        del self.components[component_type]
+        component.detach()
 
     def clear_components(self):
         for component in self.components.values():
             component.detach()
 
-    def has_component(self, component_type):
-        '''Tests if a component of given type is attached.
+    def has_component(self, component_type, component_class=None):
+        '''Checks for the existence of given component of given component_type
+        and optionally by class instance.
         '''
-        return component_type in self.components
-    
+        exists = component_type in self.components
+
+        if exists and component_class != None:
+            return isinstance(self.components[component_type], component_class)
+        
+        return exists
+
     def get_component(self, component_type):
         '''Retrieves reference to the component of the given type. A KeyError
         will be raised if there is no component of that type.
         '''
+        return self.components[component_type]
+    
+    def require(self, component_type, component_class=None):
+        '''Enforces inter-component dependencies. Returns instance to component
+        if it exists. An ActorException is raised if a component is not found.
+        '''
+        if not self.has_component(component_type, component_class):
+            error_message = 'Actor %s is missing dependency: %s' % (self.name, component_type)
+            if component_class != None:
+                error_message += ' of type %s' % component_clas.__name__
+
+            raise ActorException(error_message)
+
         return self.components[component_type]
 
     def refresh_components(self):

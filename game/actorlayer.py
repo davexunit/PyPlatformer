@@ -11,12 +11,12 @@ class ActorLayer(actor.actorlayer.ActorLayer):
     def add_actor(self, actor):
         super(ActorLayer, self).add_actor(actor)
 
-        if actor.has_component('graphics'):
-            self.batch.add(actor.get_component('graphics').sprite)
+        if actor.has_component('sprite'):
+            self.batch.add(actor.get_component('sprite').sprite)
 
     def remove_actor(self, actor):
         super(ActorLayer, self).remove_actor(actor)
 
-        if actor.has_component('graphics'):
-            self.batch.remove(actor.get_component('graphics').sprite)
+        if actor.has_component('sprite'):
+            self.batch.remove(actor.get_component('sprite').sprite)
 
