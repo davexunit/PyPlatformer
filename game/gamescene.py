@@ -55,18 +55,12 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
             self.actors.add_actor(block)
 
     def on_actor_add(self, actor):
-        if actor.has_component('physics'):
-            physics = actor.get_component('physics')
-            self.physics.space.add(physics.body, *physics.objs)
+        self.physics.on_actor_add(actor)
 
     def on_actor_exit(self, actor):
-        if actor.has_component('physics'):
-            physics = actor.get_component('physics')
-            self.physics.space.remove(physics.body, *physics.objs)
+        self.physics.on_actor_remove(actor)
     
     def _step(self, dt):
         self.physics.update(dt)
-
-
 GameScene.register_event_type('on_map_load')
 

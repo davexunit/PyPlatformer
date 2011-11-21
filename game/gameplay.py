@@ -3,6 +3,7 @@ all the necessary things for controlling the player in GameScene.
 '''
 
 import cocos
+import math
 
 import debug
 
@@ -34,5 +35,10 @@ class GameplayLayer(cocos.layer.Layer):
 
     def _step(self, dt):
         x, y = self.parent.player.get_component('physics').body.position
+
+        # Avoid not-a-number exception
+        if math.isnan(x) or math.isnan(y):
+            return
+
         self.parent.scroller.set_focus(x, y)
 

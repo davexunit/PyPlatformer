@@ -33,9 +33,6 @@ class Game(object):
         # Load configuration file
         self.load_config(util.resource.path('game.conf'))
 
-        # Initialize physics library
-        pymunk.init_pymunk()
-
         # Create window
         debug.msg('Creating window')
         director.init(width=self.config.getint('Graphics', 'screen_width'),

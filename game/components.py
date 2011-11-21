@@ -18,9 +18,17 @@ class SpriteComponent(Component):
         self.physics.push_handlers(self)
 
     def on_move(self, x, y, rel_x, rel_y):
-        self.sprite.position = (int(x), int(y))
+        # Avoid not-a-number errors
+        if math.isnan(x) or math.isnan(y):
+            return
+
+        self.sprite.position = (x, y)
 
     def on_rotate(self, angle):
+        # Avoid not-a-number errors
+        if math.isnan(angle):
+            return
+
         # Convert that shit to degrees because chipmunk uses radians
         self.sprite.rotation = math.degrees(angle)
 
@@ -65,6 +73,10 @@ class PhysicsComponent(Component):
         self.old_y = 0
         self.old_angle = 0
 
+    def on_refresh(self):
+        for shape in self.objs:
+            shape.actor = weakref.ref(self.owner)
+
     def update(self, dt):
         x, y = self.body.position
 
@@ -94,7 +106,9 @@ class CharacterPhysicsComponent(PhysicsComponent):
         self.movement_obj = None
         self.move_flags = [False, False]
         self.speed = 250
+        self.air_speed = 3000
         self.jump_force = 4000
+        self.jumping = False
 
     def move(self, direction):
         self.move_flags[direction] = True
@@ -105,13 +119,28 @@ class CharacterPhysicsComponent(PhysicsComponent):
         self.update_forces()
 
     def jump(self):
-        self.body.apply_impulse((0, self.jump_force))
+        if not self.jumping:
+            self.movement_obj.surface_velocity = (0, 0)
+            self.body.apply_impulse((0, self.jump_force))
+            self.jumping = True
+
+    def on_jump_land(self):
+        debug.msg('landed')
+        self.jumping = False
+        vx = self.body.velocity[0]
+        self.body.reset_forces()
+        self.body.velocity = ((vx, 0)) 
+        self.update_forces()
 
     def update_forces(self):
-        fx = (self.move_flags[self.DIR_RIGHT] - self.move_flags[self.DIR_LEFT]) * self.speed
-        #self.body.reset_forces()
-        self.movement_obj.surface_velocity = (fx, 0)
+        fx = self.move_flags[self.DIR_RIGHT] - self.move_flags[self.DIR_LEFT]
+        if self.jumping:
+            self.body.reset_forces()
+            self.body.apply_force((fx * self.air_speed, 0))
+        else:
+            self.movement_obj.surface_velocity = (fx * self.speed, 0)
         self.dispatch_event('on_direction_changed', fx, 0)
+
 CharacterPhysicsComponent.register_event_type('on_direction_changed')
 
 class InputComponent(Component):
