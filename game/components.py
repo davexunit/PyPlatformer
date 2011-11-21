@@ -106,7 +106,7 @@ class CharacterPhysicsComponent(PhysicsComponent):
         self.movement_obj = None
         self.move_flags = [False, False]
         self.speed = 250
-        self.air_speed = 3000
+        self.air_speed = 1500
         self.jump_force = 4000
         self.jumping = False
 
@@ -120,9 +120,10 @@ class CharacterPhysicsComponent(PhysicsComponent):
 
     def jump(self):
         if not self.jumping:
+            self.jumping = True
             self.movement_obj.surface_velocity = (0, 0)
             self.body.apply_impulse((0, self.jump_force))
-            self.jumping = True
+            self.update_forces()
 
     def on_jump_land(self):
         debug.msg('landed')
