@@ -41,6 +41,8 @@ class Game(object):
                 fullscreen=self.config.getboolean('Graphics', 'fullscreen'))
         director.show_FPS = True
 
+        debug.msg('Chipmunk version ' + pymunk.chipmunk_version)
+        debug.msg('Pymunk version ' + pymunk.version)
         # Run game scene
         scene = gamescene.GameScene()
         #scene.add(editor.EditorLayer(), z=1)

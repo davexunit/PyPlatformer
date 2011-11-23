@@ -29,6 +29,14 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
         self.scroller.add(self.tiledmap.layers['middleground'], z=1)
         self.scroller.add(self.tiledmap.layers['background'], z=0)
 
+        background = cocos.layer.ScrollableLayer()
+        image = cocos.sprite.Sprite('backgrounds/forest.jpg', anchor=(0,0))
+        background.add(image)
+        background.parallax = 0.8
+        background.px = image.width
+        background.py = image.height
+        self.scroller.add(background, z=-1)
+
         debug.msg('Loading level geometry')
         physics_file = util.resource.path(self.tiledmap.properties['physics'])
         self.physics = physics.from_xml(physics_file)
@@ -48,11 +56,16 @@ class GameScene(cocos.scene.Scene, pyglet.event.EventDispatcher):
         self.player.get_component('physics').body.position = (100, 100)
         self.actors.add_actor(self.player)
 
-        for x in range(250, 1000, 50):
+        for y in range(350, 600, 50):
             block = actors.Block()
-            block.name = 'Block %d' % x
-            block.get_component('physics').body.position = (x, 600)
+            block.name = 'Block %d' % y
+            block.get_component('physics').body.position = (350, y)
             self.actors.add_actor(block)
+
+        platform = actors.MovingPlatform()
+        platform.name = 'Platform'
+        platform.get_component('physics').body.position = (900, 144)
+        self.actors.add_actor(platform)
 
     def on_actor_add(self, actor):
         self.physics.on_actor_add(actor)

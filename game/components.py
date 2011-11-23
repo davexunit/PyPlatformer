@@ -106,8 +106,8 @@ class CharacterPhysicsComponent(PhysicsComponent):
         self.movement_obj = None
         self.move_flags = [False, False]
         self.speed = 250
-        self.air_speed = 1500
-        self.jump_force = 4000
+        self.air_speed = 1000
+        self.jump_force = 3000
         self.jumping = False
 
     def move(self, direction):

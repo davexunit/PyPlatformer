@@ -104,12 +104,14 @@ class EditorLayer(cocos.layer.Layer):
             else:
                 # Select a polygon to edit
                 shape = self.physics.space.point_query_first((x, y))
+                debug.msg('Select shape')
                 if shape != None:
                     if self.polygon != None:
                         self.commit_polygon()
 
-                    self.polygon = self.shape2poly[shape]
-                    self.polygon.color = self.active_color
+                    if shape in self.shape2poly:
+                        self.polygon = self.shape2poly[shape]
+                        self.polygon.color = self.active_color
                 else:
                     if self.polygon != None:
                         self.commit_polygon()
@@ -126,7 +128,7 @@ class EditorLayer(cocos.layer.Layer):
             # Select and delete polygon
             shape = self.physics.space.point_query_first((x, y))
             if shape != None:
-                self.delete_polygon(self.shape2poly[shape])
+                self.delete_polygon(shape)
 
     def _step(self, dt):
         # Scroll map with WASD
@@ -137,13 +139,13 @@ class EditorLayer(cocos.layer.Layer):
         scroller.set_focus(scroller.fx + dx, scroller.fy + dy)
 
     def delete_polygon(self, polygon):
-        debug.msg('Deleting polygon')
         if polygon in self.poly2shape:
+            debug.msg('Deleting polygon')
             shape = self.poly2shape[polygon]
             del self.poly2shape[polygon]
             del self.shape2poly[shape]
             self.polygon_layer.remove(polygon)
-            self.physics.space.remove_static(shape)
+            self.physics.space.remove(shape)
 
     def commit_polygon(self):
         debug.msg('Committing polygon')
@@ -152,20 +154,23 @@ class EditorLayer(cocos.layer.Layer):
             shape = self.poly2shape[self.polygon]
             del self.poly2shape[self.polygon]
             del self.shape2poly[shape]
-            self.physics.space.remove_static(shape)
+            self.physics.space.remove(shape)
          
         self.polygon.color = self.inactive_color
         # Add to physics space
         shape = physics.make_static_polygon(self.polygon.vertices)
         self.poly2shape[self.polygon] = shape
         self.shape2poly[shape] = self.polygon
-        self.physics.space.add_static(shape)
+        self.physics.space.add(shape)
         # Polygon committed. Let user make a new one.
         self.polygon = None
 
     def populate(self):
         debug.msg('Populating physics editor')
-        for shape in self.physics.space.static_shapes:
+        for shape in self.physics.space.shapes:
+            if shape.collision_type != physics.COLLTYPE_STATIC:
+                continue
+
             if isinstance(shape, pymunk.Poly):
                 polygon = Polygon()
                 for p in shape.get_points():
@@ -181,7 +186,10 @@ class EditorLayer(cocos.layer.Layer):
 
         builder.start('physics', {'name': 'physics'})
 
-        for shape in self.physics.space.static_shapes:
+        for shape in self.physics.space.shapes:
+            if shape.collision_type != physics.COLLTYPE_STATIC:
+                continue
+
             if isinstance(shape, pymunk.Poly):
                 builder.start('polygon', {})
 

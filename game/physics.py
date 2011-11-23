@@ -42,11 +42,15 @@ class Physics(object):
     def on_actor_add(self, actor):
         if actor.has_component('physics'):
             physics = actor.get_component('physics')
-            self.space.add(physics.body, *physics.objs)
+            if not physics.body.is_static:
+                self.space.add(physics.body)
+            self.space.add(*physics.objs)
     
     def on_actor_remove(self, actor):
         if actor.has_component('physics'):
             physics = actor.get_component('physics')
+            if not physics.body.is_static:
+                self.space.remove(physics.body)
             self.space.remove(physics.body, *physics.objs)
 
     def on_character_jump_land(self, space, arbiter):
@@ -61,10 +65,10 @@ class Physics(object):
         return True
 
 def make_static_polygon(vertices):
-    body = pymunk.Body(pymunk.inf, pymunk.inf)
+    body = pymunk.Body()
     polygon = pymunk.Poly(body, vertices)
     polygon.collision_type = COLLTYPE_STATIC
-    polygon.friction = .95
+    polygon.friction = 1.0
     return polygon
 
 def from_xml(filename):
@@ -82,7 +86,7 @@ def from_xml(filename):
         vertices = []
         for v in p.findall('vertex'):
             vertices.append((int(v.get('x')), int(v.get('y'))))
-        physics.space.add_static(make_static_polygon(vertices))
+        physics.space.add(make_static_polygon(vertices))
 
     return physics
 
